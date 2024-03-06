@@ -1,4 +1,4 @@
-CREATE DEFINER=`student2321`@`%` PROCEDURE `student2321`.`boravak_putnika`()
+CREATE PROCEDURE `boravak_putnika`()
 begin
 	SELECT vp.br_putnog_naloga, DATEDIFF(vp2.vrijeme_gr_prelaz, vp.vrijeme_gr_prelaz) AS vrijeme_boravka 
 FROM vrijeme_putovanja vp 
@@ -9,7 +9,7 @@ LEFT JOIN
 WHERE vp.pravac = 1 AND vp.granicni_prelaz = rpn.mjesto_boravka;
 end;
 
-CREATE DEFINER=`student2321`@`%` PROCEDURE `student2321`.`broj_formi_kontrola`(in naziv_a varchar(50), out broj_formi int, out broj_kontrola int)
+CREATE PROCEDURE `broj_formi_kontrola`(in naziv_a varchar(50), out broj_formi int, out broj_kontrola int)
 begin
 	declare provjeraNaziva int; 
 	declare aplikacija_id int;
@@ -27,7 +27,7 @@ begin
 	end if;
 end;
 
-CREATE DEFINER=`student2321`@`%` PROCEDURE `student2321`.`najposjecenije_drzave`()
+CREATE PROCEDURE `najposjecenije_drzave`()
 begin
  SELECT d.naziv_drzave  ,count(redni_broj) posjecenost from vrijeme_putovanja vp 
  left join drzava d on d.id = vp.granicni_prelaz 
@@ -35,7 +35,7 @@ begin
 order by posjecenost desc;
 end;
 
-CREATE DEFINER=`student2321`@`%` PROCEDURE `student2321`.`ProcessJsonData`(IN json_data JSON)
+CREATE PROCEDURE `ProcessJsonData`(IN json_data JSON)
 BEGIN
 	
    	declare drzava JSON;
@@ -85,13 +85,13 @@ BEGIN
    
 END;
 
-CREATE DEFINER=`student2321`@`%` PROCEDURE `student2321`.`putni_troskovi_po_valuti`()
+CREATE PROCEDURE `putni_troskovi_po_valuti`()
 begin
 	select br_putnog_naloga,sum(iznos) as iznos, valuta  from putni_troskovi pt 
 	group by br_putnog_naloga, valuta;
 end;
 
-CREATE DEFINER=`student2321`@`%` PROCEDURE `student2321`.`svi_putni_nalozi_po_datumu`(in od_datuma date, in do_datuma date)
+CREATE PROCEDURE `svi_putni_nalozi_po_datumu`(in od_datuma date, in do_datuma date)
 begin	
 	SELECT 
 	rpn.br_putnog_naloga,
@@ -108,7 +108,7 @@ WHERE (datum_i_vrijeme_pocetka_putovanja  BETWEEN od_datuma AND do_datuma)
     AND (datum_i_vrijeme_kraja_putovanja  BETWEEN od_datuma AND do_datuma);
 end;
 
-CREATE DEFINER=`student2321`@`%` PROCEDURE `student2321`.`troskovi_putnog_naloga`()
+CREATE  PROCEDURE `troskovi_putnog_naloga`()
 begin
 	SELECT 
 		sum(
@@ -125,7 +125,7 @@ begin
 		group by pt.br_putnog_naloga;
 end;
 
-CREATE DEFINER=`student2321`@`%` PROCEDURE `student2321`.`troskovi_putnog_naloga2`()
+CREATE PROCEDURE `troskovi_putnog_naloga2`()
 begin
 	SELECT 
 	pt.br_putnog_naloga ,
@@ -143,7 +143,7 @@ begin
 		group by pt.br_putnog_naloga;
 end;
 
-CREATE DEFINER=`student2321`@`%` PROCEDURE `student2321`.`ukupne_akontacije_po_valutama`(in od_datuma date, in do_datuma date)
+CREATE PROCEDURE `ukupne_akontacije_po_valutama`(in od_datuma date, in do_datuma date)
 begin
 select sum(a.iznos) as iznos , a.valuta from akontacija a 
 left join registar_putnih_naloga rpn on rpn.br_putnog_naloga = a.br_putnog_naloga 
@@ -152,7 +152,7 @@ WHERE (rpn.datum_i_vrijeme_pocetka_putovanja  BETWEEN od_datuma AND do_datuma)
 group by a.valuta;
 end;
 
-CREATE DEFINER=`student2321`@`%` PROCEDURE `student2321`.`ukupno_naloga_zaposlenika_datum`(in od_datuma date, in do_datuma date)
+CREATE  PROCEDURE `ukupno_naloga_zaposlenika_datum`(in od_datuma date, in do_datuma date)
 begin	
 	select rpn.zaposlenik_id ,z.ime,z.prezime , count(rpn.zaposlenik_id) as ukupno_naloga 
 	from registar_putnih_naloga rpn
@@ -162,7 +162,7 @@ begin
    group by rpn.zaposlenik_id;
 end;
 
-CREATE DEFINER=`student2321`@`%` PROCEDURE `student2321`.`ukupno_vrijeme_na_putu_zaposlenika`(in od_datuma date, in do_datuma date)
+CREATE PROCEDURE `ukupno_vrijeme_na_putu_zaposlenika`(in od_datuma date, in do_datuma date)
 begin
 SELECT zaposlenik_id ,
 sum(datediff(datum_i_vrijeme_kraja_putovanja, datum_i_vrijeme_pocetka_putovanja) ) 
@@ -173,7 +173,7 @@ WHERE (datum_i_vrijeme_pocetka_putovanja  BETWEEN od_datuma AND do_datuma)
 group by zaposlenik_id ;
 end;
 
-CREATE DEFINER=`student2321`@`%` PROCEDURE `student2321`.`unos_cjenovnika`(IN datum DATE, IN drzava INT, IN dnevnica DOUBLE)
+CREATE  PROCEDURE `unos_cjenovnika`(IN datum DATE, IN drzava INT, IN dnevnica DOUBLE)
 BEGIN
 	DECLARE cjenovnik_id INT;
 	start transaction;
@@ -189,7 +189,7 @@ BEGIN
     commit;
 END;
 
-CREATE DEFINER=`student2321`@`%` PROCEDURE `student2321`.`unos_cjenovnika_dnevnica`(IN json_data JSON)
+CREATE  PROCEDURE `unos_cjenovnika_dnevnica`(IN json_data JSON)
 BEGIN
     DECLARE datum date;
     DECLARE podaci JSON;
@@ -254,7 +254,7 @@ BEGIN
    commit;
 END;
 
-CREATE DEFINER=`student2321`@`%` PROCEDURE `student2321`.`vrijeme_po_drzavama`(in putni_nalog int)
+CREATE  PROCEDURE `vrijeme_po_drzavama`(in putni_nalog int)
 begin
 	declare datum_pocetak datetime;
 	declare datum_kraj datetime;
