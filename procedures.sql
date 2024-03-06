@@ -9,23 +9,6 @@ LEFT JOIN
 WHERE vp.pravac = 1 AND vp.granicni_prelaz = rpn.mjesto_boravka;
 end;
 
-CREATE PROCEDURE `broj_formi_kontrola`(in naziv_a varchar(50), out broj_formi int, out broj_kontrola int)
-begin
-	declare provjeraNaziva int; 
-	declare aplikacija_id int;
-	select  count(*) into provjeraNaziva from aplikacija 
-		where naziv = naziv_a;
-	if(provjeraNaziva <> 1) then
-		set broj_formi = NULL;
-		set broj_kontrola = NULL;
-	ELSE
-		select IDAplikacija into aplikacija_id from aplikacija a where naziv = naziv_a;
-		select count(*) into broj_formi from forma f where f.IDAplikacija = aplikacija_id;
-		select count(*) into broj_kontrola from kontrola k
-			Join forma f on f.IDForma = k.IDForma
-			where f.IDAplikacija = aplikacija_id;
-	end if;
-end;
 
 CREATE PROCEDURE `najposjecenije_drzave`()
 begin
