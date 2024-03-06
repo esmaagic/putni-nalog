@@ -1,4 +1,4 @@
--- student2321.datum_cjenovnika definition
+
 
 CREATE TABLE `datum_cjenovnika` (
   `datum_cjenovnika_id` int NOT NULL AUTO_INCREMENT,
@@ -10,7 +10,6 @@ CREATE TABLE `datum_cjenovnika` (
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
 
 
--- student2321.kursna_lista definition
 
 CREATE TABLE `kursna_lista` (
   `kursna_lista_id` int NOT NULL AUTO_INCREMENT,
@@ -20,7 +19,6 @@ CREATE TABLE `kursna_lista` (
 ) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
 
 
--- student2321.pravac_putovanja definition
 
 CREATE TABLE `pravac_putovanja` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -29,7 +27,6 @@ CREATE TABLE `pravac_putovanja` (
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
 
 
--- student2321.smjer definition
 
 CREATE TABLE `smjer` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -38,7 +35,6 @@ CREATE TABLE `smjer` (
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
 
 
--- student2321.valuta definition
 
 CREATE TABLE `valuta` (
   `valuta_id` int NOT NULL AUTO_INCREMENT,
@@ -47,7 +43,6 @@ CREATE TABLE `valuta` (
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
 
 
--- student2321.vrste_troskova definition
 
 CREATE TABLE `vrste_troskova` (
   `vrste_troskova_id` int NOT NULL AUTO_INCREMENT,
@@ -56,7 +51,6 @@ CREATE TABLE `vrste_troskova` (
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
 
 
--- student2321.zaposlenik definition
 
 CREATE TABLE `zaposlenik` (
   `zaposlenik_id` int NOT NULL AUTO_INCREMENT,
@@ -68,7 +62,6 @@ CREATE TABLE `zaposlenik` (
 ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
 
 
--- student2321.drzava definition
 
 CREATE TABLE `drzava` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -80,7 +73,6 @@ CREATE TABLE `drzava` (
 ) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
 
 
--- student2321.kurs_valute definition
 
 CREATE TABLE `kurs_valute` (
   `kursna_lista_id` int NOT NULL AUTO_INCREMENT,
@@ -95,7 +87,6 @@ CREATE TABLE `kurs_valute` (
 ) ENGINE=InnoDB AUTO_INCREMENT=86 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
 
 
--- student2321.registar_putnih_naloga definition
 
 CREATE TABLE `registar_putnih_naloga` (
   `br_putnog_naloga` int NOT NULL AUTO_INCREMENT,
@@ -115,7 +106,6 @@ CREATE TABLE `registar_putnih_naloga` (
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
 
 
--- student2321.vrijeme_putovanja definition
 
 CREATE TABLE `vrijeme_putovanja` (
   `redni_broj` int NOT NULL,
@@ -131,7 +121,6 @@ CREATE TABLE `vrijeme_putovanja` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
 
 
--- student2321.akontacija definition
 
 CREATE TABLE `akontacija` (
   `akontacija_id` int NOT NULL AUTO_INCREMENT,
@@ -146,7 +135,6 @@ CREATE TABLE `akontacija` (
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
 
 
--- student2321.cjenovnik_dnevnice definition
 
 CREATE TABLE `cjenovnik_dnevnice` (
   `datum_vazenja` int NOT NULL,
@@ -160,7 +148,6 @@ CREATE TABLE `cjenovnik_dnevnice` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
 
 
--- student2321.putni_troskovi definition
 
 CREATE TABLE `putni_troskovi` (
   `putni_troskovi_id` int NOT NULL AUTO_INCREMENT,
