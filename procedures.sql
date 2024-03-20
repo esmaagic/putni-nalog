@@ -1,14 +1,34 @@
-CREATE PROCEDURE `boravak_putnika`()
-begin
-	SELECT vp.br_putnog_naloga, DATEDIFF(vp2.vrijeme_gr_prelaz, vp.vrijeme_gr_prelaz) AS vrijeme_boravka 
-FROM vrijeme_putovanja vp 
-LEFT JOIN registar_putnih_naloga rpn ON rpn.br_putnog_naloga = vp.br_putnog_naloga 
-LEFT JOIN 
-	vrijeme_putovanja vp2 ON
-	vp.pravac <> vp2.pravac AND vp.granicni_prelaz = vp2.granicni_prelaz and vp.br_putnog_naloga = vp2.br_putnog_naloga 
-WHERE vp.pravac = 1 AND vp.granicni_prelaz = rpn.mjesto_boravka;
-end;
+CREATE  PROCEDURE `boravak_putnika`(in id int)
+BEGIN
+	declare brojac int;
 
+	SELECT COUNT(*) INTO brojac 
+    FROM registar_putnih_naloga 
+    WHERE br_putnog_naloga = id;
+    
+    -- If the provided ID doesn't exist, handle the error
+   	
+    IF brojac = 0 and id is not null THEN
+        -- Respond with an appropriate error message or action
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Putni nalog sa datim id-om nije pronadjen.';
+        
+    END IF;
+
+	
+	
+	
+	SELECT vp.br_putnog_naloga,z.zaposlenik_id,z.ime,z.prezime ,d.id as id_drzave,d.naziv_drzave,
+		DATEDIFF(vp2.vrijeme_gr_prelaz, vp.vrijeme_gr_prelaz) AS vrijeme_boravka_dani
+	FROM vrijeme_putovanja vp 
+	LEFT JOIN registar_putnih_naloga rpn ON rpn.br_putnog_naloga = vp.br_putnog_naloga 
+	LEFT JOIN 
+		vrijeme_putovanja vp2 ON
+		vp.pravac <> vp2.pravac AND vp.granicni_prelaz = vp2.granicni_prelaz and vp.br_putnog_naloga = vp2.br_putnog_naloga 
+	left join zaposlenik z on z.zaposlenik_id = rpn.zaposlenik_id
+	left join drzava d on d.id = rpn.mjesto_boravka 
+	WHERE ((id is null) or (id is not null and rpn.br_putnog_naloga = id))AND 
+	vp.pravac = 1 AND vp.granicni_prelaz = rpn.mjesto_boravka ;
+END;
 
 CREATE PROCEDURE `najposjecenije_drzave`()
 begin
@@ -18,226 +38,8 @@ begin
 order by posjecenost desc;
 end;
 
-CREATE PROCEDURE `ProcessJsonData`(IN json_data JSON)
-BEGIN
-	
-   	declare drzava JSON;
-   	declare drzava_id int;
-   	declare iznos int;
-	
 
-    DECLARE datum date;
-    DECLARE podaci JSON;
-    DECLARE array_length INT;
-    DECLARE i INT DEFAULT 0;
-    DECLARE datum_postoji int default 0;
-   	declare id_datuma int;
-   
-   
-    SET datum = JSON_UNQUOTE(JSON_EXTRACT(json_data, '$.datum'));
-    SET podaci = JSON_EXTRACT(json_data, '$.podaci');
-    SET array_length = JSON_LENGTH(podaci);  
-   select count(*) into datum_postoji from datum_cjenovnika dc where dc.datum_pocetka_vazenja=datum;   
-  
-
-   
-  	if datum_postoji=1 then
-  		select datum_cjenovnika_id into id_datuma from datum_cjenovnika dc where datum_pocetka_vazenja = datum;
-  	else 
-  		SET @sql = CONCAT("INSERT INTO datum_cjenovnika (datum_pocetka_vazenja) VALUES ('", datum, "')");
-    	PREPARE izjava FROM @sql;
-    	EXECUTE izjava;
-    	DEALLOCATE PREPARE izjava;
-    	SELECT LAST_INSERT_ID() INTO id_datuma;
-    end if;
-  
-   
-
-       
-       	set drzava = JSON_EXTRACT(podaci, '$[1].drzava');
-       	select d.id into drzava_id from drzava d where d.naziv_drzave = drzava ;
-       	
-       	set iznos = JSON_EXTRACT(podaci, '$[1].iznos');
-       
-       	set iznos = cast(JSON_UNQUOTE(JSON_EXTRACT(podaci, '$[1].iznos'))  as SIGNED);
-       
-       
- 
-
-  select drzava, drzava_id, iznos;
-   
-END;
-
-CREATE PROCEDURE `putni_troskovi_po_valuti`()
-begin
-	select br_putnog_naloga,sum(iznos) as iznos, valuta  from putni_troskovi pt 
-	group by br_putnog_naloga, valuta;
-end;
-
-CREATE PROCEDURE `svi_putni_nalozi_po_datumu`(in od_datuma date, in do_datuma date)
-begin	
-	SELECT 
-	rpn.br_putnog_naloga,
-	rpn.zaposlenik_id,
-	z.ime ,z.prezime  , 
-	rpn.datum_putnog_naloga,
-	rpn.datum_i_vrijeme_pocetka_putovanja ,
-	rpn.datum_i_vrijeme_kraja_putovanja,
-	d.naziv_drzave as mjesto_boravka
-from registar_putnih_naloga rpn 
-left join zaposlenik z on z.zaposlenik_id = rpn.zaposlenik_id 
-left join drzava d on d.id = rpn.mjesto_boravka 
-WHERE (datum_i_vrijeme_pocetka_putovanja  BETWEEN od_datuma AND do_datuma)
-    AND (datum_i_vrijeme_kraja_putovanja  BETWEEN od_datuma AND do_datuma);
-end;
-
-CREATE  PROCEDURE `troskovi_putnog_naloga`()
-begin
-	SELECT 
-		sum(
-			pt.iznos * ifnull(
-				(SELECT  kupovni_kurs  from kurs_valute kv 
-					left join kursna_lista kl on kv.kursna_lista_id = kl.kursna_lista_id 
-					where kl.datum_kursne_liste = pt.datum_troska AND 
-					kv.oznaka_valute = (SELECT distinct v.naziv_valute  from putni_troskovi pt2
-											left join valuta v on v.valuta_id = pt2.valuta 
-											where pt2.valuta = pt.valuta)
-					),1)
-			) as suma
-		from putni_troskovi pt 
-		group by pt.br_putnog_naloga;
-end;
-
-CREATE PROCEDURE `troskovi_putnog_naloga2`()
-begin
-	SELECT 
-	pt.br_putnog_naloga ,
-		sum(
-			pt.iznos * 
-				(SELECT  kupovni_kurs  from kurs_valute kv 
-					left join kursna_lista kl on kv.kursna_lista_id = kl.kursna_lista_id 
-					where kl.datum_kursne_liste = pt.datum_troska AND 
-					kv.oznaka_valute = (SELECT distinct v.naziv_valute  from putni_troskovi pt2
-											left join valuta v on v.valuta_id = pt2.valuta 
-											where pt2.valuta = pt.valuta)
-					)
-			) as suma
-		from putni_troskovi pt 
-		group by pt.br_putnog_naloga;
-end;
-
-CREATE PROCEDURE `ukupne_akontacije_po_valutama`(in od_datuma date, in do_datuma date)
-begin
-select sum(a.iznos) as iznos , a.valuta from akontacija a 
-left join registar_putnih_naloga rpn on rpn.br_putnog_naloga = a.br_putnog_naloga 
-WHERE (rpn.datum_i_vrijeme_pocetka_putovanja  BETWEEN od_datuma AND do_datuma)
-    AND (rpn.datum_i_vrijeme_kraja_putovanja  BETWEEN od_datuma AND do_datuma)
-group by a.valuta;
-end;
-
-CREATE  PROCEDURE `ukupno_naloga_zaposlenika_datum`(in od_datuma date, in do_datuma date)
-begin	
-	select rpn.zaposlenik_id ,z.ime,z.prezime , count(rpn.zaposlenik_id) as ukupno_naloga 
-	from registar_putnih_naloga rpn
-	left join zaposlenik z on z.zaposlenik_id = rpn.zaposlenik_id 
-	WHERE (datum_i_vrijeme_pocetka_putovanja  BETWEEN od_datuma AND do_datuma)
-    AND (datum_i_vrijeme_kraja_putovanja  BETWEEN od_datuma AND do_datuma)
-   group by rpn.zaposlenik_id;
-end;
-
-CREATE PROCEDURE `ukupno_vrijeme_na_putu_zaposlenika`(in od_datuma date, in do_datuma date)
-begin
-SELECT zaposlenik_id ,
-sum(datediff(datum_i_vrijeme_kraja_putovanja, datum_i_vrijeme_pocetka_putovanja) ) 
-as vrijeme_na_putu 
-from registar_putnih_naloga rpn 
-WHERE (datum_i_vrijeme_pocetka_putovanja  BETWEEN od_datuma AND do_datuma)
-    AND (datum_i_vrijeme_kraja_putovanja  BETWEEN od_datuma AND do_datuma)
-group by zaposlenik_id ;
-end;
-
-CREATE  PROCEDURE `unos_cjenovnika`(IN datum DATE, IN drzava INT, IN dnevnica DOUBLE)
-BEGIN
-	DECLARE cjenovnik_id INT;
-	start transaction;
-    SET @sql = CONCAT("INSERT INTO datum_cjenovnika (datum_pocetka_vazenja) VALUES ('", datum, "')");
-    PREPARE izjava FROM @sql;
-    EXECUTE izjava;
-    DEALLOCATE PREPARE izjava;
-    SELECT LAST_INSERT_ID() INTO cjenovnik_id;
-    SET @sql2 = CONCAT("INSERT INTO cjenovnik_dnevnice (datum_vazenja, zemlja, iznos_dnevnice_km) VALUES (", cjenovnik_id, ",", drzava, ",", dnevnica, ")");
-    PREPARE izjava2 FROM @sql2;
-    EXECUTE izjava2;
-    DEALLOCATE PREPARE izjava2;
-    commit;
-END;
-
-CREATE  PROCEDURE `unos_cjenovnika_dnevnica`(IN json_data JSON)
-BEGIN
-    DECLARE datum date;
-    DECLARE podaci JSON;
-    DECLARE array_length INT;
-   	declare drzava JSON;
-	declare cjenovnik_opis varchar(255);
-	declare cjenovnik_napomena varchar(255);
-	declare dnevnica_opis  varchar(255);
-   	declare drzava_id int;
-   	declare iznos int;
-    DECLARE i INT DEFAULT 0;
-    DECLARE datum_postoji int default 0;
-   	declare id_datuma int;
-   
-   start transaction;
-
-    SET datum = JSON_UNQUOTE(JSON_EXTRACT(json_data, '$.datum'));
-    SET podaci = JSON_EXTRACT(json_data, '$.podaci');
-    SET array_length = JSON_LENGTH(podaci);
-   
-   	set cjenovnik_opis = JSON_EXTRACT(json_data, '$.cjenovnik_opis');
-    set cjenovnik_napomena = JSON_EXTRACT(json_data, '$.cjenovnik_napomena');
-   
-   -- check datum and find id
-   
-   	select count(*) into datum_postoji from datum_cjenovnika dc where dc.datum_pocetka_vazenja=datum;
-   
-  	if datum_postoji=1 then
-  		select datum_cjenovnika_id into id_datuma from datum_cjenovnika dc where datum_pocetka_vazenja = datum;
-  	else 
-  		SET @sql = CONCAT("INSERT INTO datum_cjenovnika (datum_pocetka_vazenja, opis, napomena) VALUES ('",
-  			datum,"',", cjenovnik_opis, ",",cjenovnik_napomena ,");");
-    	PREPARE izjava FROM @sql;
-    	EXECUTE izjava;
-    	DEALLOCATE PREPARE izjava;
-    	SELECT LAST_INSERT_ID() INTO id_datuma;
-    end if;
-  		
-   
-
-    -- Loop through the array elements
-    WHILE i < array_length DO
-       
-       	set drzava = JSON_EXTRACT(podaci, CONCAT('$[', i, '].drzava'));
-       	select d.id into drzava_id from drzava d where d.naziv_drzave = drzava ;
-       
-       	
-        set dnevnica_opis = JSON_EXTRACT(podaci, CONCAT('$[', i, '].dnevnica_opis'));
-
-       	
-       	set iznos = JSON_EXTRACT(podaci, CONCAT('$[', i, '].iznos'));
-       
-       	set iznos = cast(JSON_UNQUOTE(JSON_EXTRACT(podaci, CONCAT('$[', i, '].iznos')))  as SIGNED);
-       -- unos podataka
-       	SET @sql2 = CONCAT("INSERT INTO cjenovnik_dnevnice (datum_vazenja, zemlja, iznos_dnevnice_km,opis) VALUES (",
-       						id_datuma, ",", drzava_id, ",", iznos, ",", dnevnica_opis, ");");
-	    PREPARE izjava2 FROM @sql2;
-	    EXECUTE izjava2;
-   		DEALLOCATE PREPARE izjava2;
-        SET i = i + 1;
-    END WHILE;
-   commit;
-END;
-
-CREATE  PROCEDURE `vrijeme_po_drzavama`(in putni_nalog int)
+CREATE  PROCEDURE `obracun_dnevnica_po_nalogu`(in putni_nalog int)
 begin
 	declare datum_pocetak datetime;
 	declare datum_kraj datetime;
@@ -245,8 +47,21 @@ begin
 	declare max_redni_br int;
 	declare datum_cjenovnik_id int;
 
-	select count(*) into max_redni_br 
-		from vrijeme_putovanja vp where vp.br_putnog_naloga = putni_nalog;
+
+	SELECT COUNT(*) INTO max_redni_br 
+    FROM vrijeme_putovanja vp 
+    WHERE vp.br_putnog_naloga = putni_nalog;
+    
+    -- If the provided ID doesn't exist, handle the error
+    IF max_redni_br = 0 THEN
+        -- Respond with an appropriate error message or action
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Putni nalog sa datim id-om nije pronadjen.';
+        
+    END IF;
+
+
+
+	
 	SELECT datum_i_vrijeme_pocetka_putovanja into datum_pocetak  
 		from registar_putnih_naloga  
 			where br_putnog_naloga = putni_nalog;
@@ -319,3 +134,158 @@ FROM temp
 GROUP BY drzava_id;
 
 end;
+
+CREATE  PROCEDURE `putni_troskovi_po_valuti`(in id int)
+begin
+	declare brojac int;
+
+	SELECT COUNT(*) INTO brojac 
+    FROM registar_putnih_naloga 
+    WHERE br_putnog_naloga = id;
+    
+	IF brojac = 0 and id is not null THEN
+        -- Respond with an appropriate error message or action
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Putni nalog sa datim id-om nije pronadjen.';
+    END IF;
+   
+	select br_putnog_naloga,sum(iznos) as iznos, v.naziv_valute  from putni_troskovi pt 
+	left join valuta v on v.valuta_id = pt.valuta 
+	where (id is null) or (id is not null and pt.br_putnog_naloga = id)
+	group by br_putnog_naloga, valuta;
+end;
+
+CREATE PROCEDURE `svi_putni_nalozi_po_datumu`(in od_datuma date, in do_datuma date)
+begin	
+	SELECT 
+	rpn.br_putnog_naloga,
+	rpn.zaposlenik_id,
+	z.ime ,z.prezime  , 
+	rpn.datum_putnog_naloga,
+	rpn.datum_i_vrijeme_pocetka_putovanja ,
+	rpn.datum_i_vrijeme_kraja_putovanja,
+	d.naziv_drzave as mjesto_boravka
+from registar_putnih_naloga rpn 
+left join zaposlenik z on z.zaposlenik_id = rpn.zaposlenik_id 
+left join drzava d on d.id = rpn.mjesto_boravka 
+WHERE (datum_i_vrijeme_pocetka_putovanja  BETWEEN od_datuma AND do_datuma)
+    AND (datum_i_vrijeme_kraja_putovanja  BETWEEN od_datuma AND do_datuma);
+end;
+
+CREATE PROCEDURE `troskovi_putnog_naloga`(in id int)
+BEGIN
+	SELECT 
+			pt.br_putnog_naloga ,z.zaposlenik_id, z.ime , z.prezime ,
+			sum(
+				pt.iznos * ifnull(
+					(SELECT  kupovni_kurs  from kurs_valute kv 
+						left join kursna_lista kl on kv.kursna_lista_id = kl.kursna_lista_id 
+						where kl.datum_kursne_liste = pt.datum_troska AND 
+						kv.oznaka_valute = (SELECT distinct v.naziv_valute  from putni_troskovi pt2
+												left join valuta v on v.valuta_id = pt2.valuta 
+												where pt2.valuta = pt.valuta)
+						),1)
+				) as suma
+			from putni_troskovi pt 
+			left join registar_putnih_naloga rpn on rpn.br_putnog_naloga = pt.br_putnog_naloga 
+			left join zaposlenik z on z.zaposlenik_id = rpn.zaposlenik_id 
+			where (id is null) or (id is not null and pt.br_putnog_naloga = id) 
+			group by pt.br_putnog_naloga;
+END;
+
+
+
+CREATE PROCEDURE `ukupne_akontacije_po_valutama`(in od_datuma date, in do_datuma date)
+begin
+select sum(a.iznos) as iznos , a.valuta from akontacija a 
+left join registar_putnih_naloga rpn on rpn.br_putnog_naloga = a.br_putnog_naloga 
+WHERE (rpn.datum_i_vrijeme_pocetka_putovanja  BETWEEN od_datuma AND do_datuma)
+    AND (rpn.datum_i_vrijeme_kraja_putovanja  BETWEEN od_datuma AND do_datuma)
+group by a.valuta;
+end;
+
+CREATE  PROCEDURE `ukupno_naloga_zaposlenika_datum`(in od_datuma date, in do_datuma date)
+begin	
+	select rpn.zaposlenik_id ,z.ime,z.prezime , count(rpn.zaposlenik_id) as ukupno_naloga 
+	from registar_putnih_naloga rpn
+	left join zaposlenik z on z.zaposlenik_id = rpn.zaposlenik_id 
+	WHERE (datum_i_vrijeme_pocetka_putovanja  BETWEEN od_datuma AND do_datuma)
+    AND (datum_i_vrijeme_kraja_putovanja  BETWEEN od_datuma AND do_datuma)
+   group by rpn.zaposlenik_id;
+end;
+
+CREATE  PROCEDURE `ukupno_vrijeme_na_putu_zaposlenika`(in od_datuma date, in do_datuma date)
+begin
+SELECT zaposlenik_id ,
+sum(datediff(datum_i_vrijeme_kraja_putovanja, datum_i_vrijeme_pocetka_putovanja) ) 
+as vrijeme_na_putu 
+from registar_putnih_naloga rpn 
+WHERE (datum_i_vrijeme_pocetka_putovanja  BETWEEN od_datuma AND do_datuma)
+    AND (datum_i_vrijeme_kraja_putovanja  BETWEEN od_datuma AND do_datuma)
+group by zaposlenik_id ;
+end;
+
+
+CREATE  PROCEDURE `unos_cjenovnika_dnevnica`(IN json_data JSON)
+BEGIN
+    DECLARE datum date;
+    DECLARE podaci JSON;
+    DECLARE array_length INT;
+   	declare drzava JSON;
+	declare cjenovnik_opis varchar(255);
+	declare cjenovnik_napomena varchar(255);
+	declare dnevnica_opis  varchar(255);
+   	declare drzava_id int;
+   	declare iznos int;
+    DECLARE i INT DEFAULT 0;
+    DECLARE datum_postoji int default 0;
+   	declare id_datuma int;
+   
+   start transaction;
+
+    SET datum = JSON_UNQUOTE(JSON_EXTRACT(json_data, '$.datum'));
+    SET podaci = JSON_EXTRACT(json_data, '$.podaci');
+    SET array_length = JSON_LENGTH(podaci);
+   
+   	set cjenovnik_opis = JSON_EXTRACT(json_data, '$.cjenovnik_opis');
+    set cjenovnik_napomena = JSON_EXTRACT(json_data, '$.cjenovnik_napomena');
+   
+   -- check datum and find id
+   
+   	select count(*) into datum_postoji from datum_cjenovnika dc where dc.datum_pocetka_vazenja=datum;
+   
+  	if datum_postoji=1 then
+  		select datum_cjenovnika_id into id_datuma from datum_cjenovnika dc where datum_pocetka_vazenja = datum;
+  	else 
+  		SET @sql = CONCAT("INSERT INTO datum_cjenovnika (datum_pocetka_vazenja, opis, napomena) VALUES ('",
+  			datum,"',", cjenovnik_opis, ",",cjenovnik_napomena ,");");
+    	PREPARE izjava FROM @sql;
+    	EXECUTE izjava;
+    	DEALLOCATE PREPARE izjava;
+    	SELECT LAST_INSERT_ID() INTO id_datuma;
+    end if;
+  		
+   
+
+    -- Loop through the array elements
+    WHILE i < array_length DO
+       
+       	set drzava = JSON_EXTRACT(podaci, CONCAT('$[', i, '].drzava'));
+       	select d.id into drzava_id from drzava d where d.naziv_drzave = drzava ;
+       
+       	
+        set dnevnica_opis = JSON_EXTRACT(podaci, CONCAT('$[', i, '].dnevnica_opis'));
+
+       	
+       	set iznos = JSON_EXTRACT(podaci, CONCAT('$[', i, '].iznos'));
+       
+       	set iznos = cast(JSON_UNQUOTE(JSON_EXTRACT(podaci, CONCAT('$[', i, '].iznos')))  as SIGNED);
+       -- unos podataka
+       	SET @sql2 = CONCAT("INSERT INTO cjenovnik_dnevnice (datum_vazenja, zemlja, iznos_dnevnice_km,opis) VALUES (",
+       						id_datuma, ",", drzava_id, ",", iznos, ",", dnevnica_opis, ");");
+	    PREPARE izjava2 FROM @sql2;
+	    EXECUTE izjava2;
+   		DEALLOCATE PREPARE izjava2;
+        SET i = i + 1;
+    END WHILE;
+   commit;
+END;
