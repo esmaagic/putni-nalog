@@ -7,16 +7,15 @@ CREATE TABLE `datum_cjenovnika` (
   `napomena` varchar(250) CHARACTER SET utf8mb4 COLLATE utf8mb4_bs_0900_ai_ci DEFAULT NULL,
   PRIMARY KEY (`datum_cjenovnika_id`),
   UNIQUE KEY `datum_pocetka_vazenja` (`datum_pocetka_vazenja`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
+) 
 
-
-
+  
 CREATE TABLE `kursna_lista` (
   `kursna_lista_id` int NOT NULL AUTO_INCREMENT,
   `datum_kursne_liste` date NOT NULL,
   `godina` int NOT NULL,
   PRIMARY KEY (`kursna_lista_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
+)
 
 
 
@@ -24,15 +23,14 @@ CREATE TABLE `pravac_putovanja` (
   `id` int NOT NULL AUTO_INCREMENT,
   `naziv` varchar(50) COLLATE utf8mb4_bs_0900_ai_ci DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
-
+) 
 
 
 CREATE TABLE `smjer` (
   `id` int NOT NULL AUTO_INCREMENT,
   `naziv` varchar(50) COLLATE utf8mb4_bs_0900_ai_ci DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
+)
 
 
 
@@ -40,16 +38,14 @@ CREATE TABLE `valuta` (
   `valuta_id` int NOT NULL AUTO_INCREMENT,
   `naziv_valute` varchar(50) COLLATE utf8mb4_bs_0900_ai_ci NOT NULL,
   PRIMARY KEY (`valuta_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
+)
 
-
-
+  
 CREATE TABLE `vrste_troskova` (
   `vrste_troskova_id` int NOT NULL AUTO_INCREMENT,
   `naziv` varchar(100) COLLATE utf8mb4_bs_0900_ai_ci NOT NULL,
   PRIMARY KEY (`vrste_troskova_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
-
+) 
 
 
 CREATE TABLE `zaposlenik` (
@@ -59,9 +55,8 @@ CREATE TABLE `zaposlenik` (
   `jmbg` varchar(13) COLLATE utf8mb4_bs_0900_ai_ci NOT NULL,
   PRIMARY KEY (`zaposlenik_id`),
   UNIQUE KEY `jmbg` (`jmbg`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
-
-
+) 
+  
 
 CREATE TABLE `drzava` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -70,7 +65,7 @@ CREATE TABLE `drzava` (
   PRIMARY KEY (`id`),
   KEY `fk_valuta` (`valuta`),
   CONSTRAINT `fk_valuta` FOREIGN KEY (`valuta`) REFERENCES `valuta` (`valuta_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
+) 
 
 
 
@@ -84,8 +79,7 @@ CREATE TABLE `kurs_valute` (
   `prodajni_kurs` decimal(15,6) DEFAULT NULL,
   PRIMARY KEY (`kursna_lista_id`,`oznaka_valute`),
   CONSTRAINT `kurs_valute_FK` FOREIGN KEY (`kursna_lista_id`) REFERENCES `kursna_lista` (`kursna_lista_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=86 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
-
+) 
 
 
 CREATE TABLE `registar_putnih_naloga` (
@@ -103,7 +97,7 @@ CREATE TABLE `registar_putnih_naloga` (
   KEY `registar_putnih_naloga_FK` (`zaposlenik_id`),
   CONSTRAINT `registar_putnih_naloga_FK` FOREIGN KEY (`zaposlenik_id`) REFERENCES `zaposlenik` (`zaposlenik_id`),
   CONSTRAINT `registar_putnih_naloga_ibfk_1` FOREIGN KEY (`mjesto_boravka`) REFERENCES `drzava` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
+) 
 
 
 
@@ -118,7 +112,7 @@ CREATE TABLE `vrijeme_putovanja` (
   KEY `granicni_prelaz` (`granicni_prelaz`),
   CONSTRAINT `vrijeme_putovanja_ibfk_1` FOREIGN KEY (`pravac`) REFERENCES `pravac_putovanja` (`id`),
   CONSTRAINT `vrijeme_putovanja_ibfk_2` FOREIGN KEY (`granicni_prelaz`) REFERENCES `drzava` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
+) 
 
 
 
@@ -132,7 +126,7 @@ CREATE TABLE `akontacija` (
   KEY `fk_valuta_ref_valuta` (`valuta`),
   CONSTRAINT `fk_br_putnog_naloga_ref_rpn` FOREIGN KEY (`br_putnog_naloga`) REFERENCES `registar_putnih_naloga` (`br_putnog_naloga`),
   CONSTRAINT `fk_valuta_ref_valuta` FOREIGN KEY (`valuta`) REFERENCES `valuta` (`valuta_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
+) 
 
 
 
@@ -145,7 +139,7 @@ CREATE TABLE `cjenovnik_dnevnice` (
   KEY `fk_zemlja_ref_drzava` (`zemlja`),
   CONSTRAINT `cjenovnik_dnevnice_ibfk_1` FOREIGN KEY (`datum_vazenja`) REFERENCES `datum_cjenovnika` (`datum_cjenovnika_id`),
   CONSTRAINT `fk_zemlja_ref_drzava` FOREIGN KEY (`zemlja`) REFERENCES `drzava` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
+) 
 
 
 
@@ -166,4 +160,4 @@ CREATE TABLE `putni_troskovi` (
   CONSTRAINT `putni_troskovi_ibfk_1` FOREIGN KEY (`br_putnog_naloga`) REFERENCES `registar_putnih_naloga` (`br_putnog_naloga`),
   CONSTRAINT `putni_troskovi_ibfk_2` FOREIGN KEY (`vrsta_troska`) REFERENCES `vrste_troskova` (`vrste_troskova_id`),
   CONSTRAINT `putni_troskovi_ibfk_3` FOREIGN KEY (`valuta`) REFERENCES `valuta` (`valuta_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bs_0900_ai_ci;
+) 
