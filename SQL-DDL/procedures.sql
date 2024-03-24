@@ -1,3 +1,4 @@
+-- boravak putnika u udredisnoj drzzavi u danima
 CREATE  PROCEDURE `boravak_putnika`(in id int)
 BEGIN
 	declare brojac int;
@@ -38,7 +39,7 @@ begin
 order by posjecenost desc;
 end;
 
-
+-- obracun dnevnica za svaku drzavu za jedan putni nalog
 CREATE  PROCEDURE `obracun_dnevnica_po_nalogu`(in putni_nalog int)
 begin
 	declare datum_pocetak datetime;
@@ -135,6 +136,7 @@ GROUP BY drzava_id;
 
 end;
 
+-- ukupni putni troskovi za putni nalog po valutana
 CREATE  PROCEDURE `putni_troskovi_po_valuti`(in id int)
 begin
 	declare brojac int;
@@ -171,6 +173,7 @@ WHERE (datum_i_vrijeme_pocetka_putovanja  BETWEEN od_datuma AND do_datuma)
     AND (datum_i_vrijeme_kraja_putovanja  BETWEEN od_datuma AND do_datuma);
 end;
 
+-- obracun svih troskova u markama za puzni nalog
 CREATE PROCEDURE `troskovi_putnog_naloga`(in id int)
 BEGIN
 	SELECT 
