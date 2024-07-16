@@ -4,7 +4,7 @@ Sistem putnih naloga je dizajniran za upravljanje putovanjima zaposlenika unutar
 
 ## SQL-DDL folder
    
-   Sadrzi sql komande za kreiranje svih potrebnih MySql tabela i procedura,
+   Sadrzi sql komande za kreiranje svih potrebnih MySql tabela i procedura.
    
    Sadrzi slozenije procedure kao sto su:
    
