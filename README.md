@@ -12,6 +12,6 @@
 
    
 ##  api folder
-   RESTful api - Node.js/express
+   api - Node.js/express
    
    
